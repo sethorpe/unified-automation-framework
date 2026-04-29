@@ -140,6 +140,19 @@ UAF.Tests/
 - No live implementation in MVP — architecture only
 - Roadmap: Jira Xray client, Azure DevOps client
 
+## Architecture decisions
+
+### Configuration philosophy
+
+UAF is a CommonLibrary — it owns no configuration values.
+
+- `ConfigManager` lives in `UAF.Core/Config/` and knows HOW to load config, not what the values are
+- At runtime it loads from `AppContext.BaseDirectory` — wherever the executing test binary lives
+- `UAF.Core` ships no `appsettings.json` — it is infrastructure only
+- `UAF.Tests` owns its own `appsettings.json` and `appsettings.local.json` for framework self-testing only
+- Consumer projects (e.g. `ABCBankDotComAutomation`) own their own `appsettings.json` and `appsettings.local.json`
+- Consumers are guided by `appsettings.example.json` or README schema documentation
+
 ## Roadmap items (do not build in MVP)
 - SpecFlow BDD runtime
 - StepClass hierarchy extending Steps base
@@ -149,3 +162,4 @@ UAF.Tests/
 - Selenium legacy module
 - Appium mobile layer
 - Database validation layer
+- NuGet package publishing
