@@ -10,14 +10,18 @@ public sealed class ConfigManager
     public static ConfigManager Instance => _instance.Value;
 
     public AppSettings Settings { get; }
+    public string Environment { get; }
 
     private ConfigManager()
     {
+        Environment = System.Environment.GetEnvironmentVariable("UAF_ENVIRONMENT") ?? "dev";
+
         var basePath = AppContext.BaseDirectory;
 
         var config = new ConfigurationBuilder()
             .SetBasePath(basePath)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+            .AddJsonFile($"appsettings.{Environment}.json", optional: true, reloadOnChange: false)
             .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: false)
             .Build();
 
