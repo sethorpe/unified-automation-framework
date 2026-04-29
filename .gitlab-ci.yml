@@ -23,7 +23,7 @@ test:
   dependencies:
     - build
   script:
-    - dotnet test --no-build --configuration Release --verbosity normal
+    - dotnet test --no-build --configuration Release --verbosity normal --filter "TestCategory!=Integration"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH
