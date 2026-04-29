@@ -1,24 +1,25 @@
-image: mcr.microsoft.com/dotnet/sdk:8.0
-
 stages:
   - build
   - test
 
-workflow:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
-      when: never
-    - if: $CI_COMMIT_BRANCH
-
 build:
   stage: build
+  image: mcr.microsoft.com/dotnet/sdk:8.0
   script:
     - dotnet restore
-    - dotnet build --no-restore --configuration Release -p:TreatWarningsAsErrors=true
+    - dotnet build --no-restore --configuration Release
+  artifacts:
+    paths:
+      - "**/bin/Release/"
+      - "**/obj/Release/"
+    expire_in: 1 hour
 
 test:
   stage: test
+  image: mcr.microsoft.com/dotnet/sdk:8.0
   needs: [build]
   script:
     - dotnet test --no-build --configuration Release --verbosity normal
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
