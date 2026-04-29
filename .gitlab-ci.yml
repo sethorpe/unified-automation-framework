@@ -13,11 +13,15 @@ build:
       - "**/bin/Release/"
       - "**/obj/Release/"
     expire_in: 1 hour
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH
 
 test:
   stage: test
   image: mcr.microsoft.com/dotnet/sdk:8.0
-  needs: [build]
+  dependencies:
+    - build
   script:
     - dotnet test --no-build --configuration Release --verbosity normal
   rules:
