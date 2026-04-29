@@ -180,6 +180,13 @@ When completing any GitLab issue:
    ```
 2. The issue closes automatically when the MR is merged via the `closes #N` keyword in the commit
 
+## CI/CD
+
+- GitLab CI (`.gitlab-ci.yml`) — runs on every push and every MR
+- Stages: build → test
+- Pipeline must pass before any MR can be merged
+- GitHub Actions — reserved for Allure report publishing to GitHub Pages (Phase 3)
+
 ## Architecture decisions
 
 ### Configuration philosophy
