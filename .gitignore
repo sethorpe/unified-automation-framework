@@ -49,3 +49,6 @@ appsettings.local.json
 
 ## NuGet restore
 *.lock.json
+
+## Setup scripts
+create-gitlab-issues.sh
