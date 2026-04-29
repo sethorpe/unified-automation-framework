@@ -140,6 +140,23 @@ UAF.Tests/
 - No live implementation in MVP — architecture only
 - Roadmap: Jira Xray client, Azure DevOps client
 
+## Branching strategy
+
+- Never commit directly to main
+- All features are developed in a dedicated branch
+- Branch naming convention: `feature/issue-number-short-description`
+  - `feature/8-config-manager`
+  - `feature/9-driver-factory`
+  - `feature/12-base-page`
+- Before starting any feature, create and checkout the branch:
+  ```bash
+  git checkout -b feature/N-short-description
+  ```
+- Write unit tests to validate the feature as part of the same branch
+- CI checks must pass before merging
+- Merge into main via GitLab merge request only — never merge locally
+- Delete the branch after the merge request is accepted
+
 ## Architecture decisions
 
 ### Configuration philosophy
