@@ -157,6 +157,29 @@ UAF.Tests/
 - Merge into main via GitLab merge request only — never merge locally
 - Delete the branch after the merge request is accepted
 
+## Issue hygiene
+
+When picking up any GitLab issue:
+1. Set the issue start date to today's date:
+   ```bash
+   glab api projects/:fullpath/issues/N --method PUT --field "start_date=YYYY-MM-DD"
+   ```
+2. Apply the in-progress label:
+   ```bash
+   glab issue update N --label "in-progress"
+   ```
+3. Create and checkout the feature branch:
+   ```bash
+   git checkout -b feature/N-short-description
+   ```
+
+When completing any GitLab issue:
+1. Remove the in-progress label:
+   ```bash
+   glab issue update N --remove-label "in-progress"
+   ```
+2. The issue closes automatically when the MR is merged via the `closes #N` keyword in the commit
+
 ## Architecture decisions
 
 ### Configuration philosophy
