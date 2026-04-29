@@ -113,3 +113,39 @@ UAF.Tests/
 - Do not hardcode test data — use Bogus factories
 - Do not put assertions or test logic inside page objects
 - Do not commit secrets, API keys, or local config files
+
+## BDD / TDD approach
+- TDD supported natively via NUnit — no extra tooling needed
+- BDD adopted as a style only — Given/When/Then as comments inside NUnit tests
+- No Gherkin runtime — SpecFlow deferred to roadmap
+- Tests read like BDD without the overhead of a BDD framework
+
+## Reporting
+- Allure.NUnit is the locked reporting choice — do not swap or remove
+- Console reporting via Serilog runs alongside Allure on every execution
+- Step() wrapper in BaseTest handles all Allure grouping, logging, and evidence capture
+- Every Step() call writes to both console and Allure automatically
+- Roadmap: pluggable IReporter interface supporting multiple reporters simultaneously
+
+## Steps philosophy
+- Step() lives in BaseTest — not in a separate StepClass hierarchy
+- Page objects handle UI mechanics only — no reporting, no assertions
+- Test authors call Step() with a plain English name and a lambda
+- Junior devs should never need to touch AllureApi directly
+
+## Test management integration
+- ITestManagementClient interface stubbed in UAF.Core/Integrations/
+- [TestCaseId("PROJ-1234")] for Jira Xray
+- [AzureTestCaseId("12345")] for Azure DevOps Test Plans
+- No live implementation in MVP — architecture only
+- Roadmap: Jira Xray client, Azure DevOps client
+
+## Roadmap items (do not build in MVP)
+- SpecFlow BDD runtime
+- StepClass hierarchy extending Steps base
+- IReporter multi-reporter interface
+- Jira Xray integration
+- Azure DevOps Test Plans integration
+- Selenium legacy module
+- Appium mobile layer
+- Database validation layer
