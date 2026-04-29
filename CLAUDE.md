@@ -77,3 +77,39 @@ UAF.Tests/
   API/         # REST API tests
   E2E/         # End-to-end flows that combine UI + API
 ```
+
+## Naming conventions
+- Classes and methods:  PascalCase
+- Private fields:       _camelCase with underscore prefix
+- Local variables:      camelCase
+- Constants:            UPPER_SNAKE_CASE
+- Test methods:         Should_ExpectedBehaviour_WhenCondition
+
+## Design patterns in use
+- Page Object Model (POM) for UI layer
+- Builder Pattern for test data factories
+- Singleton for DriverManager and ConfigManager
+- Factory Pattern for browser/driver creation
+- Strategy Pattern for environment switching
+
+## Commit message rules
+- Follow Conventional Commits format strictly
+- Allowed prefixes: feat, fix, chore, refactor, test, docs, ci
+- Example: feat(ui): add LoginPage page object
+- NEVER mention Claude, AI, or any tool in commit messages
+- NEVER add Co-authored-by or Generated-by lines
+- Subject line must be under 72 characters
+- Use present tense ("add feature" not "added feature")
+
+## Environment config
+- Base config:    appsettings.json (committed with placeholder values only)
+- Local config:   appsettings.local.json (gitignored, never commit)
+- Never hardcode URLs, credentials, or environment-specific values in code
+
+## What not to do
+- Do not upgrade FluentAssertions beyond 6.12.2
+- Do not add Selenium to UAF.UI — it belongs in its own legacy module
+- Do not use Thread.Sleep() — use Playwright's built-in auto-waiting
+- Do not hardcode test data — use Bogus factories
+- Do not put assertions or test logic inside page objects
+- Do not commit secrets, API keys, or local config files

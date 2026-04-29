@@ -41,3 +41,11 @@ Thumbs.db
 
 ## VS Code
 .vscode/
+
+## Environment & Secrets
+.env
+.env.*
+appsettings.local.json
+
+## NuGet restore
+*.lock.json
