@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="appsettings.dev.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="appsettings.local.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('appsettings.local.json')" />
   </ItemGroup>
 
