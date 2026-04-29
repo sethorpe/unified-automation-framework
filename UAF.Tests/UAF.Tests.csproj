@@ -24,6 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="appsettings.local.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('appsettings.local.json')" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\UAF.Core\UAF.Core.csproj" />
     <ProjectReference Include="..\UAF.UI\UAF.UI.csproj" />
     <ProjectReference Include="..\UAF.API\UAF.API.csproj" />

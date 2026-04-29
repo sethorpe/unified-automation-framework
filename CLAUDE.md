@@ -140,6 +140,66 @@ UAF.Tests/
 - No live implementation in MVP — architecture only
 - Roadmap: Jira Xray client, Azure DevOps client
 
+## Branching strategy
+
+- Never commit directly to main
+- All features are developed in a dedicated branch
+- Branch naming convention: `feature/issue-number-short-description`
+  - `feature/8-config-manager`
+  - `feature/9-driver-factory`
+  - `feature/12-base-page`
+- Before starting any feature, create and checkout the branch:
+  ```bash
+  git checkout -b feature/N-short-description
+  ```
+- Write unit tests to validate the feature as part of the same branch
+- CI checks must pass before merging
+- Merge into main via GitLab merge request only — never merge locally
+- Delete the branch after the merge request is accepted
+
+## Issue hygiene
+
+When picking up any GitLab issue:
+1. Set the issue start date to today's date:
+   ```bash
+   glab api projects/:fullpath/issues/N --method PUT --field "start_date=YYYY-MM-DD"
+   ```
+2. Apply the in-progress label:
+   ```bash
+   glab issue update N --label "in-progress"
+   ```
+3. Create and checkout the feature branch:
+   ```bash
+   git checkout -b feature/N-short-description
+   ```
+
+When completing any GitLab issue:
+1. Remove the in-progress label:
+   ```bash
+   glab issue update N --remove-label "in-progress"
+   ```
+2. The issue closes automatically when the MR is merged via the `closes #N` keyword in the commit
+
+## CI/CD
+
+- GitLab CI (`.gitlab-ci.yml`) — runs on every push and every MR
+- Stages: build → test
+- Pipeline must pass before any MR can be merged
+- GitHub Actions — reserved for Allure report publishing to GitHub Pages (Phase 3)
+
+## Architecture decisions
+
+### Configuration philosophy
+
+UAF is a CommonLibrary — it owns no configuration values.
+
+- `ConfigManager` lives in `UAF.Core/Config/` and knows HOW to load config, not what the values are
+- At runtime it loads from `AppContext.BaseDirectory` — wherever the executing test binary lives
+- `UAF.Core` ships no `appsettings.json` — it is infrastructure only
+- `UAF.Tests` owns its own `appsettings.json` and `appsettings.local.json` for framework self-testing only
+- Consumer projects (e.g. `ABCBankDotComAutomation`) own their own `appsettings.json` and `appsettings.local.json`
+- Consumers are guided by `appsettings.example.json` or README schema documentation
+
 ## Roadmap items (do not build in MVP)
 - SpecFlow BDD runtime
 - StepClass hierarchy extending Steps base
@@ -149,3 +209,4 @@ UAF.Tests/
 - Selenium legacy module
 - Appium mobile layer
 - Database validation layer
+- NuGet package publishing
