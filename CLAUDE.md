@@ -45,7 +45,7 @@ pwsh UAF.UI/bin/Debug/net8.0/playwright.ps1 install
 | `UAF.UI` | Playwright page objects and reusable components — Playwright **only** (Selenium deferred to a future legacy module) | Microsoft.Playwright 1.59.0 |
 | `UAF.API` | REST client wrappers, request/response models, service layer | RestSharp 114, Newtonsoft.Json 13 |
 | `UAF.Reporting` | Allure report helpers and custom attributes | Allure.NUnit 2.15.0 |
-| `UAF.Tests` | All runnable tests, organised under `UI/`, `API/`, `E2E/` sub-folders | NUnit 3.14, FluentAssertions **6.12.2** (pinned), Bogus |
+| `UAF.Tests` | All runnable tests, organized under `UI/`, `API/`, `E2E/` sub-folders | NUnit 3.14, FluentAssertions **6.12.2** (pinned), Bogus |
 
 ## Key package constraints
 
@@ -83,7 +83,26 @@ UAF.Tests/
 - Private fields:       _camelCase with underscore prefix
 - Local variables:      camelCase
 - Constants:            UPPER_SNAKE_CASE
-- Test methods:         Should_ExpectedBehaviour_WhenCondition
+- Test methods:         Should_ExpectedBehavior_WhenCondition
+
+## Code authorship rules
+
+These apply to every file produced in this project, no exceptions.
+
+### Code quality
+1. Simple and explicit over clever and compact
+2. Errors must be visible — capture failures, never swallow them
+3. Keep I/O at the edges; keep transformation logic pure
+4. Readable by a stranger in six months — if it needs a comment to explain what, rewrite it
+
+### Documentation
+- Every public class, method, and interface must have XML doc comments
+- Comments explain why, not what
+- If the code needs a comment to explain what it does, rewrite the code
+
+### Language
+- North American English spelling throughout
+- Initialize not Initialise, Serialize not Serialise, etc.
 
 ## Design patterns in use
 - Page Object Model (POM) for UI layer
