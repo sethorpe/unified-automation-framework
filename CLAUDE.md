@@ -94,6 +94,9 @@ These apply to every file produced in this project, no exceptions.
 2. Errors must be visible — capture failures, never swallow them
 3. Keep I/O at the edges; keep transformation logic pure
 4. Readable by a stranger in six months — if it needs a comment to explain what, rewrite it
+5. Simple means clear, not minimal — do not defer architecture that
+   demonstrates forward-thinking design. Simplicity governs how each
+   component is implemented, not whether it is built at all.
 
 ### Documentation
 - Every public class, method, and interface must have XML doc comments
