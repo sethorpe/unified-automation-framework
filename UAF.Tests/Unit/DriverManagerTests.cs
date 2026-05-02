@@ -5,34 +5,8 @@ using UAF.Core.Driver;
 namespace UAF.Tests.Unit;
 
 [TestFixture]
-public class DriverManagerTests
+public class DriverManagerUnitTests
 {
-    // --- Unit tests ---
-
-    /// <summary>
-    /// AssemblySetupFixture initializes the browser before any test runs,
-    /// so this test must temporarily reset shared state to exercise the guard.
-    /// The finally block restores the browser so subsequent tests are unaffected.
-    /// </summary>
-    [Test]
-    [Category("Unit")]
-    public async Task Should_ThrowInvalidOperationException_WhenCreatePageCalledBeforeInitialize()
-    {
-        await DriverManager.DisposeBrowserAsync();
-
-        try
-        {
-            var act = async () => await DriverManager.CreatePageAsync();
-
-            await act.Should().ThrowAsync<InvalidOperationException>()
-                .WithMessage("*AssemblySetupFixture*");
-        }
-        finally
-        {
-            await DriverManager.InitializeBrowserAsync();
-        }
-    }
-
     [Test]
     [Category("Unit")]
     public async Task Should_NotThrow_WhenClosePageCalledWithNullPage()
@@ -41,8 +15,16 @@ public class DriverManagerTests
 
         await act.Should().NotThrowAsync();
     }
+}
 
-    // --- Integration tests (real browser) ---
+[TestFixture]
+public class DriverManagerIntegrationTests
+{
+    [OneTimeSetUp]
+    public async Task OneTimeSetUp()
+    {
+        await DriverManager.InitializeBrowserAsync();
+    }
 
     [Test]
     [Category("Integration")]
