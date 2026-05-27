@@ -35,12 +35,19 @@ public abstract class BaseTest
     protected IPage Page { get; private set; } = null!;
 
     /// <summary>
-    /// Creates a fresh, isolated <see cref="IPage"/> for the current test.
+    /// Ensures the shared browser is running, then creates a fresh isolated
+    /// <see cref="IPage"/> for the current test.
     /// Called automatically by NUnit before each test method.
+    /// <see cref="DriverManager.InitializeBrowserAsync"/> is idempotent — the
+    /// browser is launched only on the first call; subsequent calls within the
+    /// same run are no-ops. This keeps unit-only CI runs browser-free: if no
+    /// test class inheriting <see cref="BaseTest"/> is executed, the browser
+    /// process is never started.
     /// </summary>
     [SetUp]
     public async Task SetUp()
     {
+        await DriverManager.InitializeBrowserAsync();
         Page = await DriverManager.CreatePageAsync();
     }
 
