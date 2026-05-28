@@ -41,7 +41,7 @@ pwsh UAF.UI/bin/Debug/net8.0/playwright.ps1 install
 
 | Project | Purpose | Key packages |
 |---|---|---|
-| `UAF.Core` | Config loading, DI container setup, Serilog wiring, base classes, shared utilities | Serilog, Microsoft.Extensions.* |
+| `UAF.Core` | Config loading, DI container setup, Serilog wiring, base classes, shared utilities | Serilog, Microsoft.Extensions.*, Allure.NUnit 2.15.0 |
 | `UAF.UI` | Playwright page objects and reusable components — Playwright **only** (Selenium deferred to a future legacy module) | Microsoft.Playwright 1.59.0 |
 | `UAF.API` | REST client wrappers, request/response models, service layer | RestSharp 114, Newtonsoft.Json 13 |
 | `UAF.Reporting` | Allure report helpers and custom attributes | Allure.NUnit 2.15.0 |
@@ -198,7 +198,7 @@ When picking up any GitLab issue:
 When completing any GitLab issue:
 1. Remove the in-progress label:
    ```bash
-   glab issue update N --remove-label "in-progress"
+   glab issue update N --unlabel "in-progress"
    ```
 2. The issue closes automatically when the MR is merged via the `closes #N` keyword in the commit
 
@@ -221,6 +221,21 @@ UAF is a CommonLibrary — it owns no configuration values.
 - `UAF.Tests` owns its own `appsettings.json` and `appsettings.local.json` for framework self-testing only
 - Consumer projects (e.g. `ABCBankDotComAutomation`) own their own `appsettings.json` and `appsettings.local.json`
 - Consumers are guided by `appsettings.example.json` or README schema documentation
+
+### Driver lifecycle
+
+- `DriverManager` is the sole owner of both `IPlaywright` and `IBrowser`
+- `DriverFactory` accepts `IPlaywright` as a parameter — it does not create or
+  own it; its only job is translating a `BrowserType` into a running `IBrowser`
+- Browser initialization is lazy — `BaseTest.[SetUp]` calls
+  `DriverManager.InitializeBrowserAsync()` (idempotent) before
+  `DriverManager.CreatePageAsync()`. Unit-only CI runs that never instantiate
+  a `BaseTest` subclass never start a browser process.
+- `AssemblySetupFixture` handles teardown only — `[OneTimeTearDown]` calls
+  `DriverManager.DisposeBrowserAsync()`, which disposes browser first then
+  Playwright (reverse creation order)
+- `IPage` is scoped per test — created in `BaseTest.[SetUp]`, closed in
+  `BaseTest.[TearDown]`
 
 ## Roadmap items (do not build in MVP)
 - SpecFlow BDD runtime
