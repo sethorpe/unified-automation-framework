@@ -1,8 +1,10 @@
+using System.Reflection;
 using Allure.Net.Commons;
 using Microsoft.Playwright;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using Serilog;
+using UAF.Core.Config;
 using UAF.Core.Driver;
 
 namespace UAF.Core.Base;
@@ -21,8 +23,12 @@ namespace UAF.Core.Base;
 ///         <see cref="DriverManager.CreatePageAsync"/>.</item>
 ///   <item><c>[TearDown]</c> — captures a failure screenshot when the test did
 ///         not pass, then disposes the page regardless of outcome.</item>
-///   <item>Serilog bootstrap (issue #15) is not yet wired — <c>Log.*</c> calls
-///         are no-ops until the logger is configured by the consumer.</item>
+/// </list>
+/// Pass-screenshot capture:
+/// <list type="bullet">
+///   <item>Opt in at config level via <c>ReportingSettings.CaptureScreenshotOnPass</c>.</item>
+///   <item>Opt in at class level by overriding <see cref="CaptureScreenshotOnPass"/>.</item>
+///   <item>Opt in at method level with <c>[CaptureOnPass]</c> — takes highest precedence.</item>
 /// </list>
 /// No assertions and no page object interactions belong here.
 /// </remarks>
@@ -35,14 +41,31 @@ public abstract class BaseTest
     protected IPage Page { get; private set; } = null!;
 
     /// <summary>
+    /// Controls whether a screenshot is attached to the Allure report when a
+    /// step passes. Evaluated once per <see cref="Step(string, Action)"/> call
+    /// after the action succeeds.
+    /// </summary>
+    /// <remarks>
+    /// Resolution order (most specific wins):
+    /// <list type="number">
+    ///   <item><c>[CaptureOnPass]</c> on the test method — always captures.</item>
+    ///   <item>This property overridden to <c>true</c> on the test class.</item>
+    ///   <item>This base implementation — reads
+    ///         <see cref="ReportingSettings.CaptureScreenshotOnPass"/> from config
+    ///         (default: <c>false</c>).</item>
+    /// </list>
+    /// Trade-off: enabling at config or class level produces a screenshot per
+    /// passing step, which grows report size quickly on long test suites.
+    /// Prefer method-level opt-in unless the entire class or run requires an
+    /// audit trail.
+    /// </remarks>
+    protected virtual bool CaptureScreenshotOnPass =>
+        ConfigManager.Instance.Settings.Reporting.CaptureScreenshotOnPass;
+
+    /// <summary>
     /// Ensures the shared browser is running, then creates a fresh isolated
     /// <see cref="IPage"/> for the current test.
     /// Called automatically by NUnit before each test method.
-    /// <see cref="DriverManager.InitializeBrowserAsync"/> is idempotent — the
-    /// browser is launched only on the first call; subsequent calls within the
-    /// same run are no-ops. This keeps unit-only CI runs browser-free: if no
-    /// test class inheriting <see cref="BaseTest"/> is executed, the browser
-    /// process is never started.
     /// </summary>
     [SetUp]
     public async Task SetUp()
@@ -61,8 +84,6 @@ public abstract class BaseTest
     {
         try
         {
-            // Only capture evidence when something went wrong — passing tests
-            // do not need a screenshot attached to the report.
             if (TestContext.CurrentContext.Result.Outcome.Status != TestStatus.Passed)
             {
                 try
@@ -71,15 +92,12 @@ public abstract class BaseTest
                 }
                 catch (Exception ex)
                 {
-                    // Evidence capture is best-effort; the original test outcome
-                    // is what matters, so we swallow this and log only a warning.
                     Log.Warning(ex, "[BaseTest] TearDown evidence capture failed — continuing cleanup");
                 }
             }
         }
         finally
         {
-            // Page must close regardless of what happened above.
             await DriverManager.ClosePageAsync(Page);
         }
     }
@@ -90,6 +108,8 @@ public abstract class BaseTest
     /// If <paramref name="action"/> throws, a best-effort screenshot is captured
     /// and the original exception is rethrown unchanged so the test reports the
     /// correct failure.
+    /// When the action passes and any tier of <see cref="ShouldCaptureOnPass"/>
+    /// resolves to <c>true</c>, a pass screenshot is also captured and attached.
     /// </summary>
     /// <param name="stepName">
     /// Human-readable step name shown in the Allure report and the console log.
@@ -105,8 +125,6 @@ public abstract class BaseTest
         }
         catch (Exception)
         {
-            // Best-effort screenshot on step failure — must never mask the
-            // original exception, so evidence capture runs in its own guard.
             try
             {
                 CaptureEvidence(stepName).GetAwaiter().GetResult();
@@ -116,7 +134,19 @@ public abstract class BaseTest
                 Log.Warning(captureEx, "[BaseTest] Evidence capture failed during step '{StepName}'", stepName);
             }
 
-            throw; // preserve original exception type and stack trace
+            throw;
+        }
+
+        if (ShouldCaptureOnPass())
+        {
+            try
+            {
+                CaptureEvidence(stepName).GetAwaiter().GetResult();
+            }
+            catch (Exception captureEx)
+            {
+                Log.Warning(captureEx, "[BaseTest] Pass evidence capture failed during step '{StepName}'", stepName);
+            }
         }
     }
 
@@ -135,9 +165,10 @@ public abstract class BaseTest
     {
         Log.Information("[Step] {StepName}", stepName);
 
+        T result;
         try
         {
-            return AllureApi.Step(stepName, action);
+            result = AllureApi.Step(stepName, action);
         }
         catch (Exception)
         {
@@ -152,6 +183,49 @@ public abstract class BaseTest
 
             throw;
         }
+
+        if (ShouldCaptureOnPass())
+        {
+            try
+            {
+                CaptureEvidence(stepName).GetAwaiter().GetResult();
+            }
+            catch (Exception captureEx)
+            {
+                Log.Warning(captureEx, "[BaseTest] Pass evidence capture failed during step '{StepName}'", stepName);
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Evaluates the three-tier resolution order and returns <c>true</c> when
+    /// a pass screenshot should be captured for the currently executing test step.
+    /// Exposed as <c>internal</c> so the resolution logic can be tested in
+    /// <c>UAF.Tests</c> without involving Allure or screenshot capture.
+    /// </summary>
+    internal bool ShouldCaptureOnPass()
+        => ShouldCaptureOnPass(TestContext.CurrentContext.Test.MethodName ?? string.Empty);
+
+    /// <summary>
+    /// Core resolution logic. Accepts <paramref name="methodName"/> explicitly
+    /// so that unit tests can exercise all tiers without requiring a live NUnit
+    /// test context.
+    /// </summary>
+    /// <param name="methodName">The name of the test method to inspect.</param>
+    internal bool ShouldCaptureOnPass(string methodName)
+    {
+        // NUnit test method names are assumed to be unique within a class.
+        // Overloaded test method names would cause GetMethod to throw
+        // AmbiguousMatchException — NUnit itself does not support test method
+        // overloads, so this assumption holds for all well-formed test classes.
+        var method = GetType().GetMethod(methodName);
+
+        if (method?.GetCustomAttribute<CaptureOnPassAttribute>() is not null)
+            return true;
+
+        return CaptureScreenshotOnPass;
     }
 
     /// <summary>
