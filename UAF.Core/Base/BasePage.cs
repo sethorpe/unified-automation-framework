@@ -1,4 +1,5 @@
 using Microsoft.Playwright;
+using Serilog;
 
 namespace UAF.Core.Base;
 
@@ -17,8 +18,12 @@ namespace UAF.Core.Base;
 ///         default timeout is configured on the browser context — allowing
 ///         the <c>ConfigManager</c> timeout setting to flow through naturally
 ///         without any extra wiring here.</item>
-///   <item>No logging, no Allure steps, no assertions live here — those
-///         belong in the test layer.</item>
+///   <item>Each public method emits a <c>Debug</c>-level log entry before
+///         executing. At the default <c>Information</c> level these entries
+///         are silent. Set <c>LogLevel</c> to <c>"Debug"</c> in
+///         <c>appsettings.local.json</c> to enable the action trail.</item>
+///   <item>No Allure steps, no assertions live here — those belong in the
+///         test layer.</item>
 /// </list>
 /// </remarks>
 public abstract class BasePage
@@ -52,10 +57,12 @@ public abstract class BasePage
     /// Clicks the first element matching <paramref name="selector"/>.
     /// Waits for the element to be visible and enabled before clicking
     /// (Playwright auto-waiting — no <c>Thread.Sleep</c> required).
+    /// Emits a <c>Debug</c>-level log entry before executing.
     /// </summary>
     /// <param name="selector">A CSS, XPath, or Playwright text selector.</param>
     protected async Task ClickAsync(string selector)
     {
+        Log.Debug("[BasePage] {Action} '{Selector}'", nameof(ClickAsync), selector);
         await Page.ClickAsync(selector);
     }
 
@@ -64,22 +71,26 @@ public abstract class BasePage
     /// <paramref name="value"/> into it.
     /// Waits for the element to be editable before filling
     /// (Playwright auto-waiting — no <c>Thread.Sleep</c> required).
+    /// Emits a <c>Debug</c>-level log entry before executing.
     /// </summary>
     /// <param name="selector">A CSS, XPath, or Playwright text selector.</param>
     /// <param name="value">The text to fill into the element.</param>
     protected async Task FillAsync(string selector, string value)
     {
+        Log.Debug("[BasePage] {Action} '{Selector}'", nameof(FillAsync), selector);
         await Page.FillAsync(selector, value);
     }
 
     /// <summary>
     /// Returns the visible inner text of the first element matching
     /// <paramref name="selector"/>.
+    /// Emits a <c>Debug</c>-level log entry before executing.
     /// </summary>
     /// <param name="selector">A CSS, XPath, or Playwright text selector.</param>
     /// <returns>The trimmed inner text of the matched element.</returns>
     protected async Task<string> GetTextAsync(string selector)
     {
+        Log.Debug("[BasePage] {Action} '{Selector}'", nameof(GetTextAsync), selector);
         return await Page.InnerTextAsync(selector);
     }
 
@@ -88,10 +99,12 @@ public abstract class BasePage
     /// <paramref name="selector"/> is visible in the viewport;
     /// <c>false</c> otherwise.
     /// Does not wait — evaluates the current DOM state immediately.
+    /// Emits a <c>Debug</c>-level log entry before executing.
     /// </summary>
     /// <param name="selector">A CSS, XPath, or Playwright text selector.</param>
     protected async Task<bool> IsVisibleAsync(string selector)
     {
+        Log.Debug("[BasePage] {Action} '{Selector}'", nameof(IsVisibleAsync), selector);
         return await Page.IsVisibleAsync(selector);
     }
 
@@ -99,10 +112,12 @@ public abstract class BasePage
     /// Waits until the element matching <paramref name="selector"/> appears
     /// in the DOM and is visible.
     /// Uses Playwright's built-in waiting — no polling or <c>Thread.Sleep</c>.
+    /// Emits a <c>Debug</c>-level log entry before executing.
     /// </summary>
     /// <param name="selector">A CSS, XPath, or Playwright text selector.</param>
     protected async Task WaitForSelectorAsync(string selector)
     {
+        Log.Debug("[BasePage] {Action} '{Selector}'", nameof(WaitForSelectorAsync), selector);
         await Page.WaitForSelectorAsync(selector);
     }
 
@@ -110,17 +125,20 @@ public abstract class BasePage
     /// Waits until the page URL matches <paramref name="urlOrPattern"/>.
     /// Accepts an exact URL string, a glob pattern, or a regex string.
     /// Useful for confirming navigation has completed after a click or form submit.
+    /// Emits a <c>Debug</c>-level log entry before executing.
     /// </summary>
     /// <param name="urlOrPattern">
     /// An exact URL, glob (e.g. <c>"**/dashboard"</c>), or regex pattern.
     /// </param>
     protected async Task WaitForUrlAsync(string urlOrPattern)
     {
+        Log.Debug("[BasePage] {Action} '{Selector}'", nameof(WaitForUrlAsync), urlOrPattern);
         await Page.WaitForURLAsync(urlOrPattern);
     }
 
     /// <summary>
     /// Captures a full-page screenshot of the current browser viewport.
+    /// Emits a <c>Debug</c>-level log entry before executing.
     /// </summary>
     /// <returns>
     /// A byte array containing the PNG-encoded screenshot.
@@ -128,6 +146,7 @@ public abstract class BasePage
     /// </returns>
     protected async Task<byte[]> TakeScreenshotAsync()
     {
+        Log.Debug("[BasePage] {Action}", nameof(TakeScreenshotAsync));
         return await Page.ScreenshotAsync(new PageScreenshotOptions
         {
             FullPage = true
