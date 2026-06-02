@@ -149,6 +149,24 @@ These apply to every file produced in this project, no exceptions.
 - Every Step() call writes to both console and Allure automatically
 - Roadmap: pluggable IReporter interface supporting multiple reporters simultaneously
 
+### Pass screenshot capture
+
+Failure screenshots are automatic. Pass screenshots are opt-in via three tiers
+(most specific wins):
+
+1. **Method level** — `[CaptureOnPass]` attribute on the test method
+2. **Class level** — `protected override bool CaptureScreenshotOnPass => true;` on the test class
+3. **Config level** — `"CaptureScreenshotOnPass": true` in the `Reporting` block of `appsettings.json`
+
+Default is `false` at all levels — no pass screenshots without explicit opt-in.
+
+Use method-level for single audit-trail tests. Use class-level for a whole fixture.
+Use config-level only for regulated runs where every test needs evidence (flip the
+flag in `appsettings.local.json` or an environment-specific `appsettings.{env}.json`).
+
+Do not add screenshot logic to page objects or call `AllureApi` directly — `Step()`
+handles all evidence capture automatically.
+
 ## Steps philosophy
 - Step() lives in BaseTest — not in a separate StepClass hierarchy
 - Page objects handle UI mechanics only — no reporting, no assertions
